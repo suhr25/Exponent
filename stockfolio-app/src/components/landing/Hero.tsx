@@ -96,7 +96,7 @@ export default function Hero() {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="text-base sm:text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-12 leading-relaxed hero-subtitle-shadow"
           >
-            AI-powered portfolio intelligence, professional-grade screeners, 
+            AI-powered portfolio intelligence, professional-grade screeners,
             real-time charting, and market insights {' '}
             <span className="text-zinc-200 font-medium">built for serious Indian investors.</span>
           </motion.p>
@@ -304,11 +304,10 @@ export function Features() {
                   <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{item.name}</div>
                   <div className="text-sm font-bold text-white font-mono-num mt-0.5">{item.value}</div>
                 </div>
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-lg font-mono-num ${
-                  item.up
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-lg font-mono-num ${item.up
                     ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/10'
                     : 'bg-red-500/10 text-red-400 border border-red-500/10'
-                }`}>
+                  }`}>
                   {item.change}
                 </span>
               </div>

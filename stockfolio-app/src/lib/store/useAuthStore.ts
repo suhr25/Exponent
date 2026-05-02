@@ -23,6 +23,8 @@ interface AuthStore {
   loginWithEmail: (email: string, password: string) => Promise<{ error?: string }>;
   signupWithEmail: (name: string, email: string, password: string) => Promise<{ error?: string; needsConfirmation?: boolean }>;
   loginWithGoogle: () => Promise<void>;
+  loginWithPhone: (phone: string) => Promise<{ error?: string }>;
+  verifyOtp: (phone: string, token: string) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -161,6 +163,38 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
+  },
+
+  loginWithPhone: async (phone: string) => {
+    set({ isLoading: true, error: null });
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOtp({ phone });
+    if (error) {
+      set({ isLoading: false, error: error.message });
+      return { error: error.message };
+    }
+    set({ isLoading: false });
+    return {};
+  },
+
+  verifyOtp: async (phone: string, token: string) => {
+    set({ isLoading: true, error: null });
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
+    if (error) {
+      set({ isLoading: false, error: error.message });
+      return { error: error.message };
+    }
+    if (data.user) {
+      const profile = await fetchProfile(data.user.id);
+      set({
+        supabaseUser: data.user,
+        user: profile || userFromSession(data.user),
+        isAuthenticated: true,
+        isLoading: false,
+      });
+    }
+    return {};
   },
 
   logout: async () => {

@@ -84,11 +84,11 @@ export default function GlobalSearch() {
       {/* Search Trigger Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 px-3 py-2 rounded-xl text-zinc-500 hover:text-zinc-300 bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.04] transition-all"
+        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-zinc-500 hover:text-zinc-300 bg-white/[0.025] hover:bg-white/[0.05] border border-white/[0.05] hover:border-white/[0.09] transition-all group"
       >
-        <Search className="w-4 h-4" />
-        <span className="text-xs hidden sm:inline">Search stocks...</span>
-        <kbd className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded bg-white/[0.05] text-zinc-600 font-mono border border-white/[0.06]">
+        <Search className="w-3.5 h-3.5 flex-shrink-0" />
+        <span className="text-xs flex-1 text-left truncate min-w-0">Search stocks...</span>
+        <kbd className="flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-white/[0.05] text-zinc-600 font-mono border border-white/[0.06]">
           ⌘K
         </kbd>
       </button>

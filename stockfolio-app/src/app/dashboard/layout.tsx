@@ -16,7 +16,10 @@ import { useAuthStore } from '@/lib/store/useAuthStore';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import MarketStatusBar from '@/components/shared/MarketStatusBar';
 import GlobalSearch from '@/components/shared/GlobalSearch';
+import dynamic from 'next/dynamic';
 import { Toaster } from 'sonner';
+
+const ParticleCanvas = dynamic(() => import('@/components/shared/ParticleCanvas'), { ssr: false });
 
 // ─── Nav Structure ──────────────────────────────────────────────────────────
 
@@ -158,12 +161,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!initialized || isLoading) {
     return (
       <div className="min-h-screen bg-[#050507] flex items-center justify-center overflow-hidden">
-        {/* Same orbs so loading → dashboard transition is seamless */}
-        <div aria-hidden className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="orb orb-cyan w-[700px] h-[700px]" style={{ top: '-15%', left: '-8%' }} />
-          <div className="orb orb-violet w-[600px] h-[600px]" style={{ top: '30%', right: '-12%' }} />
-          <div className="orb orb-emerald w-[500px] h-[500px]" style={{ bottom: '-10%', left: '35%' }} />
-        </div>
+        <ParticleCanvas />
         <div className="relative flex flex-col items-center gap-5">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-cyan-500/20 animate-pulse">
             <svg className="w-5 h-5 text-[#050507]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -193,11 +191,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-[#050507] flex">
-      {/* Ambient animated background */}
+      {/* Particle network background */}
+      <ParticleCanvas />
+      {/* Ambient orbs behind particles for depth */}
       <div aria-hidden className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="orb orb-cyan  w-[700px] h-[700px]" style={{ top: '-15%', left: '-8%' }} />
-        <div className="orb orb-violet w-[600px] h-[600px]" style={{ top: '30%', right: '-12%' }} />
-        <div className="orb orb-emerald w-[500px] h-[500px]" style={{ bottom: '-10%', left: '35%' }} />
+        <div className="orb orb-cyan   w-[600px] h-[600px]" style={{ top: '-10%', left: '-5%' }} />
+        <div className="orb orb-violet w-[500px] h-[500px]" style={{ top: '40%', right: '-10%' }} />
+        <div className="orb orb-emerald w-[400px] h-[400px]" style={{ bottom: '-8%', left: '30%' }} />
       </div>
 
       <Toaster

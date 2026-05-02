@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, TrendingUp, Zap, Shield, BarChart3, Brain, Globe2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const HeroBackground = dynamic(() => import('./HeroBackground'), { ssr: false });
 
 // ─── Animated Counter ─────────────────────────────────────────────────────
 function AnimatedCounter({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
@@ -33,28 +36,23 @@ function AnimatedCounter({ value, prefix = '', suffix = '' }: { value: number; p
 export default function Hero() {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Deep mesh gradient background */}
+      {/* Base gradient */}
       <div className="absolute inset-0 hero-gradient" />
 
-      {/* Animated gradient orbs — GPU composited, no JS overhead */}
-      <div className="absolute inset-0 z-[1] overflow-hidden">
-        <div className="orb orb-cyan  w-[800px] h-[800px]" style={{ top: '-10%', left: '5%' }} />
-        <div className="orb orb-violet w-[700px] h-[700px]" style={{ top: '15%', right: '0%' }} />
-        <div className="orb orb-emerald w-[600px] h-[600px]" style={{ bottom: '5%', left: '42%' }} />
-      </div>
+      {/* Aurora + Particles — dual canvas animation */}
+      <HeroBackground />
 
-      {/* Dark vignette for text readability — strong center obscure */}
-      <div className="absolute inset-0 z-[2]" style={{
-        background: 'radial-gradient(ellipse at 50% 50%, rgba(5,5,7,0.7) 0%, rgba(5,5,7,0.4) 40%, rgba(5,5,7,0.9) 100%)'
+      {/* Vignette — keeps text crisp over the animation */}
+      <div className="absolute inset-0 z-[3]" style={{
+        background: 'radial-gradient(ellipse at 50% 45%, rgba(5,5,7,0.55) 0%, rgba(5,5,7,0.25) 40%, rgba(5,5,7,0.82) 100%)'
       }} />
 
-      {/* Top fade */}
-      <div className="absolute top-0 inset-x-0 h-48 z-[2] bg-gradient-to-b from-[#050507] via-[#050507]/80 to-transparent" />
-      {/* Bottom fade */}
-      <div className="absolute bottom-0 inset-x-0 h-56 z-[2] bg-gradient-to-t from-[#050507] via-[#050507]/80 to-transparent" />
+      {/* Top / bottom fades */}
+      <div className="absolute top-0 inset-x-0 h-40 z-[3] bg-gradient-to-b from-[#050507] via-[#050507]/70 to-transparent" />
+      <div className="absolute bottom-0 inset-x-0 h-48 z-[3] bg-gradient-to-t from-[#050507] via-[#050507]/70 to-transparent" />
 
       {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
+      <div className="relative z-[10] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
         <div className="max-w-4xl mx-auto text-center">
           {/* Live badge */}
           <motion.div

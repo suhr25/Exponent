@@ -242,8 +242,8 @@ export function Features() {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-50px' }}
-              transition={{ delay: i * 0.1 }}
-              className="glass-card rounded-2xl p-7 group relative"
+              transition={{ delay: i * 0.08 }}
+              className={`glass-card card-lift rounded-2xl p-7 group relative sr sr-delay-${Math.min(i + 1, 6)}`}
             >
               {/* Ambient glow on hover */}
               <div

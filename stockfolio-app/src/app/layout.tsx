@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from 'sonner';
+import dynamic from 'next/dynamic';
+
+const CustomCursor  = dynamic(() => import('@/components/shared/CustomCursor'),  { ssr: false });
+const GlobalEffects = dynamic(() => import('@/components/shared/GlobalEffects'), { ssr: false });
 
 export const metadata: Metadata = {
   title: "Exponent: AI-Powered Indian Stock Market Platform",
@@ -34,6 +38,8 @@ export default function RootLayout({
         }} />
       </head>
       <body className="antialiased">
+        <CustomCursor />
+        <GlobalEffects />
         {children}
         <Toaster
           position="top-right"

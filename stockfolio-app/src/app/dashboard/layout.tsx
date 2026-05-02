@@ -143,7 +143,7 @@ function SidebarItem({
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, isLoading, initialized, initialize, logout } = useAuthStore();
+  const { user, isLoading, initialized, initialize } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -151,9 +151,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     initialize();
   }, [initialize]);
 
-  const handleLogout = async () => {
-    await logout();
-    window.location.href = '/';
+  const handleLogout = () => {
+    window.location.href = '/auth/signout';
   };
 
   if (!initialized || isLoading) {

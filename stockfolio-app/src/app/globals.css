@@ -211,6 +211,11 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
 /* ─── Ambient Orb Animations ────────────────────────────────────────────── */
 @keyframes orb-drift-a {
   0%, 100% { transform: translate(0px,   0px)  scale(1);    }
@@ -377,4 +382,64 @@ input:focus, select:focus, textarea:focus {
 
 .hero-subtitle-shadow {
   text-shadow: 0 1px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* ─── Global Interaction Polish ─────────────────────────────────────────── */
+
+/* Every clickable element gets instant visual feedback */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Crisp active press on all buttons */
+button:not(:disabled):active,
+[role="button"]:active {
+  transform: scale(0.97);
+  transition: transform 0.06s ease !important;
+}
+
+/* Links — underline slide-in on hover */
+a.nav-link {
+  position: relative;
+  text-decoration: none;
+}
+a.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, #22d3ee, #34d399);
+  transition: width 0.2s ease;
+  border-radius: 2px;
+}
+a.nav-link:hover::after { width: 100%; }
+
+/* Smooth scroll for entire page */
+html { scroll-behavior: smooth; }
+
+/* All interactive elements transition instantly */
+button, a, input, select, textarea {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus visible only for keyboard users */
+:focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.5);
+  outline-offset: 2px;
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* Page view transitions for instant-feel navigation */
+@keyframes fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+::view-transition-old(root) {
+  animation: fade-out 0.08s ease both;
+}
+::view-transition-new(root) {
+  animation: fade-in 0.1s ease both;
 }

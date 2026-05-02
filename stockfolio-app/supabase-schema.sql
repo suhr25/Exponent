@@ -1,6 +1,9 @@
 -- ============================================================================
 -- Exponent — Supabase Database Schema
 -- Run this in Supabase SQL Editor (supabase.com → your project → SQL Editor)
+--
+-- First-time setup: run the entire file.
+-- If tables already exist: run only the MIGRATION section at the bottom.
 -- ============================================================================
 
 -- 1. Profiles table (auto-created on signup)
@@ -109,7 +112,7 @@ create table if not exists public.alerts (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
   symbol text not null,
-  condition text not null check (condition in ('above', 'below')),
+  condition text not null check (condition in ('above', 'below', 'pct_above', 'pct_below')),
   target_price numeric(12,2) not null,
   active boolean default true,
   triggered boolean default false,
@@ -117,6 +120,7 @@ create table if not exists public.alerts (
   triggered_at timestamptz
 );
 
+-- condition supports: above / below (fixed price) and pct_above / pct_below (% move)
 alter table public.alerts enable row level security;
 
 create policy "Users can view own alerts"
@@ -133,4 +137,28 @@ create policy "Users can delete own alerts"
 
 -- ============================================================================
 -- Done! All tables created with Row Level Security.
+-- ============================================================================
+
+-- ============================================================================
+-- MIGRATIONS — run these if tables already exist from a previous setup
+-- ============================================================================
+
+-- Allow percentage-based alert conditions (pct_above / pct_below)
+-- Skip if running the full schema above for the first time.
+alter table public.alerts
+  drop constraint if exists alerts_condition_check;
+
+alter table public.alerts
+  add constraint alerts_condition_check
+  check (condition in ('above', 'below', 'pct_above', 'pct_below'));
+
+-- ============================================================================
+-- MongoDB collections (paper trading & leaderboard)
+-- These are managed automatically by the app — no manual setup required.
+-- Just add MONGODB_URI to your .env.local (see .env.example).
+--
+--  Collection: paper_trades
+--    { user_id, username, balance, usedMargin, netWorth,
+--      orders: [...], holdings: [...], updatedAt }
+--    Indexed on: user_id (unique), netWorth (for leaderboard sort)
 -- ============================================================================

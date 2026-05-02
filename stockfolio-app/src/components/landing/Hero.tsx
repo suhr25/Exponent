@@ -2,12 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { ArrowRight, TrendingUp, Zap, Shield, BarChart3, Brain, Globe2 } from 'lucide-react';
-
-const Scene = dynamic(() => import('@/components/three/Scene'), { ssr: false });
-const ParticleField = dynamic(() => import('@/components/three/ParticleField'), { ssr: false });
 
 // ─── Animated Counter ─────────────────────────────────────────────────────
 function AnimatedCounter({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
@@ -40,12 +36,11 @@ export default function Hero() {
       {/* Deep mesh gradient background */}
       <div className="absolute inset-0 hero-gradient" />
 
-      {/* 3D Particles - behind everything */}
-      <div className="absolute inset-0 z-[1]">
-        <Scene>
-          <ambientLight intensity={0.2} />
-          <ParticleField />
-        </Scene>
+      {/* Animated gradient orbs — GPU composited, no JS overhead */}
+      <div className="absolute inset-0 z-[1] overflow-hidden">
+        <div className="orb orb-cyan  w-[800px] h-[800px]" style={{ top: '-10%', left: '5%' }} />
+        <div className="orb orb-violet w-[700px] h-[700px]" style={{ top: '15%', right: '0%' }} />
+        <div className="orb orb-emerald w-[600px] h-[600px]" style={{ bottom: '5%', left: '42%' }} />
       </div>
 
       {/* Dark vignette for text readability — strong center obscure */}

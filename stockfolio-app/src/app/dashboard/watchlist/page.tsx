@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Trash2, Search, Plus, TrendingUp, TrendingDown, Bell } from 'lucide-react';
@@ -10,7 +10,10 @@ import { MOCK_QUOTES } from '@/lib/utils/mock-data';
 import { formatCurrency, formatPercent, getChangeColor, getChangeBg, timeAgo } from '@/lib/utils/formatters';
 
 export default function WatchlistPage() {
-  const { items, addToWatchlist, removeFromWatchlist } = useWatchlistStore();
+  const { items, addToWatchlist, removeFromWatchlist, fetchFromSupabase } = useWatchlistStore();
+
+  // Load authoritative data from Supabase on mount (overrides localStorage cache)
+  useEffect(() => { fetchFromSupabase(); }, [fetchFromSupabase]);
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
 

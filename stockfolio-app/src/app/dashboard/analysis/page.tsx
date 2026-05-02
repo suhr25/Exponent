@@ -1,227 +1,118 @@
 'use client';
 
-import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { LineChart as LineChartIcon, ShieldCheck, AlertTriangle, TrendingUp, TrendingDown, Info, CheckCircle } from 'lucide-react';
-import { usePortfolioStore } from '@/lib/store/usePortfolioStore';
-import {
-  calculatePortfolioScore,
-  getTopPerformers,
-  getWorstPerformers,
-  getPortfolioInsights,
-  calculateHHI,
-  generatePortfolioHistory,
-} from '@/lib/utils/analysis';
-import { formatCurrency, formatPercent, formatCurrencyCompact, getChangeColor } from '@/lib/utils/formatters';
-import EmptyState from '@/components/ui/EmptyState';
-import { SkeletonStats, SkeletonChart } from '@/components/ui/Skeleton';
-import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import { 
+  Flame, Swords, ShieldAlert, Radio, Landmark, BarChart3, 
+  CalendarDays, Calculator, ArrowRight 
+} from 'lucide-react';
 
-const PortfolioChart = dynamic(() => import('@/components/charts/PortfolioChart'), { ssr: false });
-const SectorDonut = dynamic(() => import('@/components/charts/SectorDonut'), { ssr: false });
-const HealthRing = dynamic(() => import('@/components/charts/HealthRing'), { ssr: false });
-
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
-};
-const item = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
-};
-
-const insightIcons = {
-  success: <CheckCircle className="w-4 h-4 text-emerald-400" />,
-  warning: <AlertTriangle className="w-4 h-4 text-amber-400" />,
-  danger: <AlertTriangle className="w-4 h-4 text-red-400" />,
-  info: <Info className="w-4 h-4 text-cyan-400" />,
-};
-
-const insightBg = {
-  success: 'bg-emerald-500/[0.06] border-emerald-500/10',
-  warning: 'bg-amber-500/[0.06] border-amber-500/10',
-  danger: 'bg-red-500/[0.06] border-red-500/10',
-  info: 'bg-cyan-500/[0.06] border-cyan-500/10',
-};
-
-export default function AnalysisPage() {
-  const { holdings, isLoading, fetchHoldings, totalInvested, currentValue, sectorAllocation } = usePortfolioStore();
-
-  useEffect(() => {
-    fetchHoldings();
-  }, [fetchHoldings]);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <SkeletonStats />
-        <SkeletonChart />
-      </div>
-    );
+const ANALYSIS_TOOLS = [
+  {
+    title: 'Market Heatmap',
+    description: 'Visual representation of the market grouped by sector and performance.',
+    icon: Flame,
+    href: '/dashboard/analysis/heatmap',
+    color: 'from-orange-500 to-red-500',
+    bg: 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+  },
+  {
+    title: 'Stock Battle',
+    description: 'Head-to-head comparison of two stocks across fundamentals and technicals.',
+    icon: Swords,
+    href: '/dashboard/analysis/battle',
+    color: 'from-cyan-500 to-blue-500',
+    bg: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+  },
+  {
+    title: 'IPO Radar',
+    description: 'Track upcoming, active, and recently listed IPOs with GMP data.',
+    icon: Landmark,
+    href: '/dashboard/analysis/ipo',
+    color: 'from-emerald-500 to-teal-500',
+    bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+  },
+  {
+    title: 'Options X-Ray',
+    description: 'Advanced option chain analysis, PCR, and Max Pain for indices.',
+    icon: Radio,
+    href: '/dashboard/analysis/options',
+    color: 'from-violet-500 to-purple-500',
+    bg: 'bg-violet-500/10 text-violet-400 border-violet-500/20'
+  },
+  {
+    title: 'Crash Simulator',
+    description: 'Stress test your portfolio against historical market crash scenarios.',
+    icon: ShieldAlert,
+    href: '/dashboard/analysis/stress-test',
+    color: 'from-red-500 to-rose-500',
+    bg: 'bg-red-500/10 text-red-400 border-red-500/20'
+  },
+  {
+    title: 'FII / DII Flow',
+    description: 'Track institutional cash flows and market participation trends.',
+    icon: BarChart3,
+    href: '/dashboard/analysis/fii-dii',
+    color: 'from-blue-500 to-indigo-500',
+    bg: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+  },
+  {
+    title: 'Dividends Calendar',
+    description: 'Track upcoming corporate actions and high-yield dividend stocks.',
+    icon: CalendarDays,
+    href: '/dashboard/analysis/dividends',
+    color: 'from-pink-500 to-rose-500',
+    bg: 'bg-pink-500/10 text-pink-400 border-pink-500/20'
+  },
+  {
+    title: 'Tax Planner',
+    description: 'Estimate your STCG and LTCG taxes under the current Indian tax regime.',
+    icon: Calculator,
+    href: '/dashboard/analysis/tax',
+    color: 'from-amber-500 to-yellow-500',
+    bg: 'bg-amber-500/10 text-amber-400 border-amber-500/20'
   }
+];
 
-  if (holdings.length === 0) {
-    return (
-      <div className="glass-card rounded-xl">
-        <EmptyState
-          icon={<LineChartIcon className="w-7 h-7 text-cyan-400/50" />}
-          title="No Data to Analyze"
-          description="Add stocks to your portfolio to see insights, health score, diversification analysis, and performance metrics."
-          action={{ label: 'Go to Portfolio', onClick: () => window.location.href = '/dashboard/portfolio' }}
-        />
-      </div>
-    );
-  }
-
-  const score = calculatePortfolioScore(holdings);
-  const topPerformers = getTopPerformers(holdings);
-  const worstPerformers = getWorstPerformers(holdings);
-  const insights = getPortfolioInsights(holdings);
-  const hhi = calculateHHI(holdings);
-  const sectors = sectorAllocation();
-  const invested = totalInvested();
-  const chartData = generatePortfolioHistory(invested);
-
-  const hhiLabel = hhi < 1500 ? 'Diversified' : hhi < 2500 ? 'Moderate' : 'Concentrated';
-  const hhiColor = hhi < 1500 ? 'text-emerald-400' : hhi < 2500 ? 'text-amber-400' : 'text-red-400';
-
+export default function AnalysisHubPage() {
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      {/* Header */}
-      <motion.div variants={item}>
-        <h1 className="text-2xl font-extrabold tracking-tight">Analysis</h1>
-        <p className="text-sm text-zinc-500 mt-1">Portfolio health, diversification, and insights</p>
-      </motion.div>
-
-      {/* Top Row: Health + Insights */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Health Score */}
-        <motion.div variants={item} className="glass-card rounded-xl p-6 flex flex-col items-center justify-center">
-          <h3 className="text-sm font-bold text-zinc-200 mb-6">Portfolio Health</h3>
-          <HealthRing score={score} size={140} />
-          <div className="mt-5 text-center">
-            <div className="text-xs text-zinc-500">
-              Based on diversification, returns, and risk concentration
-            </div>
-          </div>
-
-          {/* HHI */}
-          <div className="mt-5 w-full p-3 rounded-xl bg-white/[0.02] border border-white/[0.03]">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-zinc-500">HHI Index</span>
-              <span className={`text-sm font-bold font-mono-num ${hhiColor}`}>
-                {Math.round(hhi)} <span className="text-xs font-normal">({hhiLabel})</span>
-              </span>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Insights */}
-        <motion.div variants={item} className="lg:col-span-2 glass-card rounded-xl p-6">
-          <h3 className="text-sm font-bold text-zinc-200 mb-4 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-cyan-400" />
-            Portfolio Insights
-          </h3>
-          <div className="space-y-3">
-            {insights.map((insight, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + i * 0.1 }}
-                className={`flex items-start gap-3 p-4 rounded-xl border ${insightBg[insight.type]}`}
-              >
-                <div className="mt-0.5">{insightIcons[insight.type]}</div>
-                <div>
-                  <div className="text-sm font-semibold">{insight.title}</div>
-                  <div className="text-xs text-zinc-400 mt-0.5">{insight.description}</div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">Analysis Hub</h1>
+        <p className="text-zinc-400 max-w-2xl">
+          Advanced tools and market intelligence to power your trading decisions.
+        </p>
       </div>
 
-      {/* Performance Chart */}
-      <motion.div variants={item} className="glass-card rounded-xl p-6">
-        <h3 className="text-sm font-bold text-zinc-200 mb-4">Portfolio Performance (90 Days)</h3>
-        <PortfolioChart data={chartData} />
-      </motion.div>
-
-      {/* Sector Allocation + Top/Worst */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Sector Donut */}
-        <motion.div variants={item} className="glass-card rounded-xl p-6">
-          <h3 className="text-sm font-bold text-zinc-200 mb-4">Sector Allocation</h3>
-          <SectorDonut data={sectors} />
-          <div className="mt-4 space-y-2">
-            {sectors.map((s) => (
-              <div key={s.sector} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                  <span className="text-zinc-400">{s.sector}</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {ANALYSIS_TOOLS.map((tool, idx) => {
+          const Icon = tool.icon;
+          return (
+            <Link key={tool.href} href={tool.href}>
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="glass-card rounded-2xl p-6 h-full border border-white/[0.04] hover:border-white/10 hover:bg-white/[0.02] transition-all group relative overflow-hidden"
+              >
+                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${tool.color} opacity-[0.03] rounded-full blur-3xl group-hover:opacity-10 transition-opacity duration-500`} />
+                
+                <div className={`w-12 h-12 rounded-xl border ${tool.bg} flex items-center justify-center mb-5`}>
+                  <Icon className="w-6 h-6" />
                 </div>
-                <span className="font-bold font-mono-num">{s.percentage.toFixed(1)}%</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Top Performers */}
-        <motion.div variants={item} className="glass-card rounded-xl p-6">
-          <h3 className="text-sm font-bold text-zinc-200 mb-4 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-emerald-400" />
-            Top Performers
-          </h3>
-          <div className="space-y-3">
-            {topPerformers.map((h, i) => (
-              <div key={h.id} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.03]">
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-xs font-bold text-emerald-400">
-                    {i + 1}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-sm">{h.symbol}</div>
-                    <div className="text-[11px] text-zinc-600">{h.quantity} shares</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold text-emerald-400 font-mono-num">+{formatPercent(h.pnlPercent)}</div>
-                  <div className="text-[11px] text-zinc-500 font-mono-num">+{formatCurrency(h.pnl)}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Worst Performers */}
-        <motion.div variants={item} className="glass-card rounded-xl p-6">
-          <h3 className="text-sm font-bold text-zinc-200 mb-4 flex items-center gap-2">
-            <TrendingDown className="w-4 h-4 text-red-400" />
-            Worst Performers
-          </h3>
-          <div className="space-y-3">
-            {worstPerformers.map((h, i) => (
-              <div key={h.id} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.03]">
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-red-500/10 flex items-center justify-center text-xs font-bold text-red-400">
-                    {i + 1}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-sm">{h.symbol}</div>
-                    <div className="text-[11px] text-zinc-600">{h.quantity} shares</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className={`text-sm font-bold font-mono-num ${getChangeColor(h.pnlPercent)}`}>
-                    {formatPercent(h.pnlPercent)}
-                  </div>
-                  <div className="text-[11px] text-zinc-500 font-mono-num">{formatCurrency(h.pnl)}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+                
+                <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                  {tool.title}
+                  <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                </h3>
+                
+                <p className="text-sm text-zinc-400 leading-relaxed">
+                  {tool.description}
+                </p>
+              </motion.div>
+            </Link>
+          );
+        })}
       </div>
     </motion.div>
   );

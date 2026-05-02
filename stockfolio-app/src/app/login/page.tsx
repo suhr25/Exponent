@@ -3,31 +3,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, ArrowLeft, Loader2, Phone, Mail, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 
-type Tab = 'email' | 'phone';
-type PhoneStep = 'number' | 'otp';
-
 export default function LoginPage() {
-  const { loginWithEmail, loginWithGoogle, loginWithPhone, verifyOtp, error, clearError } = useAuthStore();
-
-  const [tab, setTab] = useState<Tab>('email');
-
-  // Email state
+  const { loginWithEmail, loginWithGoogle, error, clearError } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
 
-  // Phone state
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [phoneStep, setPhoneStep] = useState<PhoneStep>('number');
-  const [sendingOtp, setSendingOtp] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-
-  const handleEmailSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     clearError();
     setLoggingIn(true);
@@ -39,31 +25,8 @@ export default function LoginPage() {
     }
   };
 
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    clearError();
-    setSendingOtp(true);
-    const fullPhone = `+91${phone.replace(/\D/g, '')}`;
-    const result = await loginWithPhone(fullPhone);
-    setSendingOtp(false);
-    if (!result.error) setPhoneStep('otp');
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    clearError();
-    setVerifying(true);
-    const fullPhone = `+91${phone.replace(/\D/g, '')}`;
-    const result = await verifyOtp(fullPhone, otp);
-    setVerifying(false);
-    if (!result.error) window.location.href = '/dashboard';
-  };
-
-  const switchTab = (t: Tab) => { clearError(); setTab(t); setPhoneStep('number'); };
-
   return (
     <div className="min-h-screen bg-[#050507] flex items-center justify-center p-4 overflow-hidden">
-      {/* Background orbs */}
       <div aria-hidden className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="orb orb-cyan  w-[600px] h-[600px]" style={{ top: '-10%', left: '-5%' }} />
         <div className="orb orb-violet w-[500px] h-[500px]" style={{ bottom: '-5%', right: '-8%' }} />
@@ -81,7 +44,6 @@ export default function LoginPage() {
         </Link>
 
         <div className="glass-card rounded-2xl p-8">
-          {/* Logo */}
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-cyan-500/20">
               <svg viewBox="0 0 24 24" className="w-5 h-5 text-[#050507]" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -97,8 +59,7 @@ export default function LoginPage() {
 
           {/* Google */}
           <button
-            onClick={() => loginWithGoogle()}
-            type="button"
+            onClick={() => loginWithGoogle()} type="button"
             className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-white/[0.07] text-sm font-semibold hover:bg-white/[0.04] active:scale-[0.98] transition-all mb-5"
           >
             <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
@@ -110,150 +71,46 @@ export default function LoginPage() {
             Continue with Google
           </button>
 
-          <div className="flex items-center gap-3 mb-5">
+          <div className="flex items-center gap-3 mb-6">
             <div className="flex-1 h-px bg-white/[0.05]" />
             <span className="text-xs text-zinc-600 font-semibold uppercase tracking-wider">or</span>
             <div className="flex-1 h-px bg-white/[0.05]" />
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1 p-1 rounded-xl bg-white/[0.03] border border-white/[0.04] mb-6">
-            {(['email', 'phone'] as Tab[]).map((t) => (
-              <button
-                key={t}
-                onClick={() => switchTab(t)}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all ${
-                  tab === t
-                    ? 'bg-white/[0.07] text-white shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                {t === 'email' ? <Mail className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
-                {t === 'email' ? 'Email' : 'Phone'}
-              </button>
-            ))}
-          </div>
-
-          {/* Error */}
           <AnimatePresence>
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400"
-              >
+              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
                 {error}
               </motion.div>
             )}
           </AnimatePresence>
 
-          <AnimatePresence mode="wait">
-            {/* ── Email tab ── */}
-            {tab === 'email' && (
-              <motion.form
-                key="email"
-                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.15 }}
-                onSubmit={handleEmailSubmit}
-                className="space-y-4"
-              >
-                <div>
-                  <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">Email</label>
-                  <input
-                    type="email" value={email} onChange={e => setEmail(e.target.value)}
-                    placeholder="you@example.com" required disabled={loggingIn}
-                    className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white placeholder-zinc-600 text-sm outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 disabled:opacity-50 transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">Password</label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'} value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="••••••••" required minLength={6} disabled={loggingIn}
-                      className="w-full px-4 py-3 pr-11 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white placeholder-zinc-600 text-sm outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 disabled:opacity-50 transition-all"
-                    />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400 transition-colors">
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-                <button type="submit" disabled={loggingIn || !email || !password}
-                  className="w-full py-3 rounded-xl btn-primary-glow text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all">
-                  {loggingIn ? <><Loader2 className="w-4 h-4 animate-spin" />Signing in...</> : 'Sign In'}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">Email</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="you@example.com" required disabled={loggingIn}
+                className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white placeholder-zinc-600 text-sm outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 disabled:opacity-50 transition-all" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">Password</label>
+              <div className="relative">
+                <input type={showPassword ? 'text' : 'password'} value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••" required minLength={6} disabled={loggingIn}
+                  className="w-full px-4 py-3 pr-11 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white placeholder-zinc-600 text-sm outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 disabled:opacity-50 transition-all" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400 transition-colors">
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
-              </motion.form>
-            )}
-
-            {/* ── Phone tab ── */}
-            {tab === 'phone' && (
-              <motion.div
-                key="phone"
-                initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.15 }}
-              >
-                <AnimatePresence mode="wait">
-                  {/* Step 1 — enter number */}
-                  {phoneStep === 'number' && (
-                    <motion.form key="number"
-                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                      transition={{ duration: 0.1 }}
-                      onSubmit={handleSendOtp} className="space-y-4"
-                    >
-                      <div>
-                        <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">Mobile Number</label>
-                        <div className="flex gap-2">
-                          <div className="flex items-center gap-2 px-3 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm text-zinc-400 font-semibold whitespace-nowrap">
-                            🇮🇳 +91
-                          </div>
-                          <input
-                            type="tel" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                            placeholder="98765 43210" required maxLength={10} disabled={sendingOtp}
-                            className="flex-1 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white placeholder-zinc-600 text-sm outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 disabled:opacity-50 transition-all font-mono-num tracking-wider"
-                          />
-                        </div>
-                        <p className="text-xs text-zinc-600 mt-2">We'll send a 6-digit OTP to this number</p>
-                      </div>
-                      <button type="submit" disabled={sendingOtp || phone.length < 10}
-                        className="w-full py-3 rounded-xl btn-primary-glow text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all">
-                        {sendingOtp ? <><Loader2 className="w-4 h-4 animate-spin" />Sending OTP...</> : <>Send OTP <ArrowRight className="w-4 h-4" /></>}
-                      </button>
-                    </motion.form>
-                  )}
-
-                  {/* Step 2 — enter OTP */}
-                  {phoneStep === 'otp' && (
-                    <motion.form key="otp"
-                      initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
-                      transition={{ duration: 0.15 }}
-                      onSubmit={handleVerifyOtp} className="space-y-4"
-                    >
-                      <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm text-emerald-400">
-                        OTP sent to +91 {phone}
-                      </div>
-                      <div>
-                        <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">Enter OTP</label>
-                        <input
-                          type="text" value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                          placeholder="• • • • • •" required maxLength={6} disabled={verifying} autoFocus
-                          className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white placeholder-zinc-600 text-center text-xl font-bold tracking-[0.5em] outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 disabled:opacity-50 transition-all font-mono-num"
-                        />
-                      </div>
-                      <button type="submit" disabled={verifying || otp.length < 6}
-                        className="w-full py-3 rounded-xl btn-primary-glow text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all">
-                        {verifying ? <><Loader2 className="w-4 h-4 animate-spin" />Verifying...</> : 'Verify & Sign In'}
-                      </button>
-                      <button type="button" onClick={() => { setPhoneStep('number'); setOtp(''); clearError(); }}
-                        className="w-full text-xs text-zinc-500 hover:text-zinc-300 transition-colors py-1">
-                        ← Change number
-                      </button>
-                    </motion.form>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+            </div>
+            <button type="submit" disabled={loggingIn || !email || !password}
+              className="w-full py-3 rounded-xl btn-primary-glow text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all">
+              {loggingIn ? <><Loader2 className="w-4 h-4 animate-spin" />Signing in...</> : 'Sign In'}
+            </button>
+          </form>
 
           <p className="text-sm text-zinc-500 text-center mt-6">
             Don&apos;t have an account?{' '}

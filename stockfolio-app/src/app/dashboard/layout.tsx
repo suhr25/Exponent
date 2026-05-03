@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -144,8 +144,22 @@ function SidebarItem({
 
 // ─── Layout ─────────────────────────────────────────────────────────────────
 
+// All dashboard routes — prefetched on mount so Turbopack compiles them
+// before the user clicks, eliminating the "Compiling..." delay.
+const ALL_ROUTES = [
+  '/dashboard', '/dashboard/portfolio', '/dashboard/screener', '/dashboard/stocks',
+  '/dashboard/watchlist', '/dashboard/alerts', '/dashboard/settings',
+  '/dashboard/analysis', '/dashboard/analysis/heatmap', '/dashboard/analysis/battle',
+  '/dashboard/analysis/stress-test', '/dashboard/analysis/options',
+  '/dashboard/analysis/ipo', '/dashboard/analysis/fii-dii',
+  '/dashboard/analysis/dividends', '/dashboard/analysis/tax',
+  '/dashboard/paper', '/dashboard/paper/trade', '/dashboard/paper/portfolio',
+  '/dashboard/paper/orders', '/dashboard/paper/learn', '/dashboard/paper/leaderboard',
+];
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router   = useRouter();
   const { user, isLoading, initialized, initialize } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -153,6 +167,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  // Warm up all routes so Turbopack pre-compiles them in the background
+  useEffect(() => {
+    ALL_ROUTES.forEach(r => router.prefetch(r));
+  }, [router]);
 
   const handleLogout = () => {
     window.location.href = '/auth/signout';

@@ -1,17 +1,17 @@
-# 🚀 Exponent: Advanced Stock Portfolio & Analysis
+# Exponent: Advanced Stock Portfolio & Analysis
 
 Exponent (StockFolio) is a premium, high-performance SaaS platform built for serious Indian investors. It features a modern, glassmorphic design with real-time tracking, advanced analytics, and interactive 3D visualizations.
 
 ![Hero Section Placeholder](https://github.com/suhr25/Exponent/raw/main/stockfolio-app/public/next.svg) 
 
-## ✨ Key Features
+## * Key Features
 
-- **💎 Premium Design:** Sleek dark-mode interface with glassmorphism, smooth Framer Motion animations, and custom 3D particle fields.
-- **📊 Real-time Portfolio Tracking:** Monitor your holdings, P&L, and sector exposure with live updates.
-- **🛡️ Advanced Analytics:** In-depth health metrics, sector donut charts, and historical performance analysis.
-- **🔍 Stock Screener:** Find and analyze stocks with high-precision tools.
-- **🔐 Secure Auth:** Full authentication flow powered by Supabase.
-- **📱 Responsive UI:** Fully optimized for all device sizes.
+- ** Premium Design:** Sleek dark-mode interface with glassmorphism, smooth Framer Motion animations, and custom 3D particle fields.
+- ** Real-time Portfolio Tracking:** Monitor your holdings, P&L, and sector exposure with live updates.
+- ** Advanced Analytics:** In-depth health metrics, sector donut charts, and historical performance analysis.
+- ** Stock Screener:** Find and analyze stocks with high-precision tools.
+- ** Secure Auth:** Full authentication flow powered by Supabase.
+- ** Responsive UI:** Fully optimized for all device sizes.
 
 ## 🛠️ Tech Stack
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -23,17 +23,53 @@ const STOCKS = [
   { sym: 'WIPRO',    val: '₹478',   chg: '+1.12%', up: true  },
 ];
 
+// Map URL error codes to user-friendly messages
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  auth_code_exchange_failed: 'Google sign-in failed. Please try again.',
+  auth_failed: 'Authentication failed. Please try again.',
+  no_auth_code: 'Authentication was cancelled or timed out. Please try again.',
+};
+
 export default function LoginPage() {
-  const { loginWithEmail, loginWithGoogle, error, clearError } = useAuthStore();
+  const { loginWithEmail, loginWithGoogle, error, clearError, isAuthenticated, initialize, initialized } = useAuthStore();
   const [email, setEmail]           = useState('');
   const [password, setPassword]     = useState('');
   const [showPw, setShowPw]         = useState(false);
   const [loading, setLoading]       = useState(false);
+  const [urlError, setUrlError]     = useState<string | null>(null);
   const router                      = useRouter();
+
+  // Initialize auth store
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (initialized && isAuthenticated) {
+      router.replace('/dashboard');
+    }
+  }, [initialized, isAuthenticated, router]);
+
+  // Check for error in URL on mount (from failed auth callback)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const errorCode = params.get('error');
+    if (errorCode) {
+      setUrlError(AUTH_ERROR_MESSAGES[errorCode] || 'Something went wrong. Please try again.');
+      // Clean up the URL without triggering a navigation
+      const url = new URL(window.location.href);
+      url.searchParams.delete('error');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, []);
+
+  const displayError = error || urlError;
 
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     clearError();
+    setUrlError(null);
     setLoading(true);
     const result = await loginWithEmail(email, password);
     if (!result.error) router.push('/dashboard');
@@ -199,10 +235,10 @@ export default function LoginPage() {
 
           {/* Error */}
           <AnimatePresence>
-            {error && (
+            {displayError && (
               <motion.div initial={{ opacity: 0, y: -6, height: 0 }} animate={{ opacity: 1, y: 0, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                 className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
-                {error}
+                {displayError}
               </motion.div>
             )}
           </AnimatePresence>

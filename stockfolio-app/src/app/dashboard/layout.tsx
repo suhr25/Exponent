@@ -168,6 +168,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     initialize();
   }, [initialize]);
 
+  // Client-side auth guard — redirect to login if not authenticated after init
+  useEffect(() => {
+    if (initialized && !isLoading && !user) {
+      router.replace('/login');
+    }
+  }, [initialized, isLoading, user, router]);
+
   // Warm up all routes so Turbopack pre-compiles them in the background
   useEffect(() => {
     ALL_ROUTES.forEach(r => router.prefetch(r));
@@ -177,7 +184,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     window.location.href = '/auth/signout';
   };
 
-  if (!initialized || isLoading) {
+  if (!initialized || isLoading || !user) {
     return (
       <div className="min-h-screen bg-[#050507] flex items-center justify-center overflow-hidden">
         <ParticleCanvas />

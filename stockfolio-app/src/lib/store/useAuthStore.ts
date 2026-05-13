@@ -156,13 +156,25 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
   },
 
   loginWithGoogle: async () => {
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    set({ isLoading: true, error: null });
+    try {
+      const supabase = createClient();
+      // Use NEXT_PUBLIC_SITE_URL for production, fallback to current origin for dev
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${baseUrl}/auth/callback`,
+        },
+      });
+      if (error) {
+        set({ isLoading: false, error: error.message });
+      }
+      // Note: On success, the browser navigates away to Google, so isLoading stays true
+    } catch (err) {
+      set({ isLoading: false, error: 'Failed to initiate Google sign-in. Please try again.' });
+      console.error('Google OAuth error:', err);
+    }
   },
 
   loginWithPhone: async (phone: string) => {

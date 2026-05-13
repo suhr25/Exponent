@@ -123,7 +123,14 @@ export function getMockSectorAllocation(): SectorAllocation[] {
 
 // ─── Historical Candle Data ──────────────────────────────────────────────────
 
-export function generateMockCandles(days: number = 365, basePrice: number = 2500): CandleData[] {
+export function generateMockCandles(days: number = 365, basePrice: number = 2500, symbol: string = 'DEFAULT'): CandleData[] {
+  // Use a symbol-seeded random so each stock gets unique chart data
+  let seed = 5381;
+  for (let i = 0; i < symbol.length; i++) {
+    seed = ((seed << 5) + seed + symbol.charCodeAt(i)) & 0x7fffffff;
+  }
+  const r = seededRandom(seed + days);
+
   const candles: CandleData[] = [];
   let price = basePrice;
   const now = Date.now();
@@ -133,12 +140,12 @@ export function generateMockCandles(days: number = 365, basePrice: number = 2500
     const volatility = 0.02;
     const drift = 0.0003;
 
-    const change = price * (drift + volatility * (rand() - 0.5) * 2);
+    const change = price * (drift + volatility * (r() - 0.5) * 2);
     const open = price;
     const close = price + change;
-    const high = Math.max(open, close) * (1 + rand() * 0.01);
-    const low = Math.min(open, close) * (1 - rand() * 0.01);
-    const volume = Math.floor(5000000 + rand() * 15000000);
+    const high = Math.max(open, close) * (1 + r() * 0.01);
+    const low = Math.min(open, close) * (1 - r() * 0.01);
+    const volume = Math.floor(5000000 + r() * 15000000);
 
     candles.push({
       timestamp: Math.floor(timestamp / 1000),
@@ -156,36 +163,102 @@ export function generateMockCandles(days: number = 365, basePrice: number = 2500
 
 // ─── Stock Detail ────────────────────────────────────────────────────────────
 
-export function getMockStockDetail(symbol: string): StockDetail {
-  const quote = MOCK_QUOTES.find(q => q.symbol === symbol) || MOCK_QUOTES[0];
+// Generate a deterministic hash from a symbol string for seeded random per stock
+function hashSymbol(symbol: string): number {
+  let hash = 5381;
+  for (let i = 0; i < symbol.length; i++) {
+    hash = ((hash << 5) + hash + symbol.charCodeAt(i)) & 0x7fffffff;
+  }
+  return hash || 1;
+}
+
+// Generate a deterministic quote for any symbol not in MOCK_QUOTES
+function generateQuoteForSymbol(symbol: string, companyName?: string, sector?: string, industry?: string): StockQuote {
+  const r = seededRandom(hashSymbol(symbol));
+  const mcapType = r(); // 0-1
+  // Price range: large cap 500-5000, mid cap 100-2000, small cap 10-500
+  let basePrice: number;
+  let baseMcap: number;
+  if (mcapType > 0.7) {
+    basePrice = 500 + r() * 4500;
+    baseMcap = (2 + r() * 18) * 1e12;
+  } else if (mcapType > 0.3) {
+    basePrice = 100 + r() * 1900;
+    baseMcap = (0.5 + r() * 4.5) * 1e12;
+  } else {
+    basePrice = 10 + r() * 490;
+    baseMcap = (0.01 + r() * 0.49) * 1e12;
+  }
+  const ltp = +basePrice.toFixed(2);
+  const changePct = +((r() - 0.45) * 6).toFixed(2);
+  const change = +(ltp * changePct / 100).toFixed(2);
+  const close = +(ltp - change).toFixed(2);
+  const high = +(ltp * (1 + r() * 0.02)).toFixed(2);
+  const low = +(ltp * (1 - r() * 0.02)).toFixed(2);
+  const open = +(close + (r() - 0.5) * ltp * 0.01).toFixed(2);
+  const pe = +(5 + r() * 80).toFixed(1);
+  const pb = +(0.5 + r() * 15).toFixed(1);
+  const high52w = +(ltp * (1.05 + r() * 0.3)).toFixed(2);
+  const low52w = +(ltp * (0.5 + r() * 0.35)).toFixed(2);
+
   return {
-    ...quote,
-    description: `${quote.companyName} is one of India's leading companies in the ${quote.sector} sector, with a strong market presence and consistent growth trajectory.`,
-    website: `https://www.${symbol.toLowerCase()}.com`,
-    employees: 50000 + Math.floor(rand() * 200000),
-    founded: `${1950 + Math.floor(rand() * 50)}`,
-    ceo: 'CEO Name',
-    roce: +(10 + rand() * 25).toFixed(1),
-    roe: +(8 + rand() * 30).toFixed(1),
-    debtToEquity: +(rand() * 1.5).toFixed(2),
-    eps: +(quote.ltp / (quote.pe || 20)).toFixed(2),
-    bookValue: +(quote.ltp / (quote.pb || 5)).toFixed(2),
-    faceValue: [1, 2, 5, 10][Math.floor(rand() * 4)],
-    promoterHolding: +(40 + rand() * 30).toFixed(1),
-    fiiHolding: +(10 + rand() * 25).toFixed(1),
-    diiHolding: +(5 + rand() * 20).toFixed(1),
-    publicHolding: 0,
-    financials: generateMockFinancials(),
+    symbol,
+    companyName: companyName || symbol,
+    ltp, open, high, low, close,
+    volume: Math.floor(100000 + r() * 30000000),
+    change, changePercent: changePct,
+    marketCap: baseMcap,
+    pe, pb,
+    sector: sector || 'General',
+    industry: industry || 'General',
+    dividendYield: +(r() * 4).toFixed(1),
+    high52w, low52w,
   };
 }
 
-function generateMockFinancials(): StockDetail['financials'] {
+// Cache generated details so repeated calls return the same object
+const detailCache = new Map<string, StockDetail>();
+
+export function getMockStockDetail(symbol: string, companyName?: string, sector?: string, industry?: string): StockDetail {
+  if (detailCache.has(symbol)) return detailCache.get(symbol)!;
+
+  // Prefer hardcoded data if available
+  const hardcoded = MOCK_QUOTES.find(q => q.symbol === symbol);
+  const quote = hardcoded || generateQuoteForSymbol(symbol, companyName, sector, industry);
+
+  const r = seededRandom(hashSymbol(symbol) + 999);
+  const detail: StockDetail = {
+    ...quote,
+    description: `${quote.companyName} is one of India's leading companies in the ${quote.sector} sector, with a strong market presence and consistent growth trajectory.`,
+    website: `https://www.${symbol.toLowerCase()}.com`,
+    employees: 500 + Math.floor(r() * 250000),
+    founded: `${1950 + Math.floor(r() * 60)}`,
+    ceo: 'CEO Name',
+    roce: +(5 + r() * 30).toFixed(1),
+    roe: +(3 + r() * 35).toFixed(1),
+    debtToEquity: +(r() * 2).toFixed(2),
+    eps: +(quote.ltp / (quote.pe || 20)).toFixed(2),
+    bookValue: +(quote.ltp / (quote.pb || 5)).toFixed(2),
+    faceValue: [1, 2, 5, 10][Math.floor(r() * 4)],
+    promoterHolding: +(30 + r() * 40).toFixed(1),
+    fiiHolding: +(5 + r() * 25).toFixed(1),
+    diiHolding: +(5 + r() * 20).toFixed(1),
+    publicHolding: 0,
+    financials: generateMockFinancials(symbol),
+  };
+
+  detailCache.set(symbol, detail);
+  return detail;
+}
+
+function generateMockFinancials(symbol: string): StockDetail['financials'] {
+  const r = seededRandom(hashSymbol(symbol) + 7777);
   const periods = ['Q1 FY25', 'Q2 FY25', 'Q3 FY25', 'Q4 FY25', 'Q1 FY26'];
   return periods.map(period => ({
     period,
-    revenue: +(50000 + rand() * 100000).toFixed(0),
-    netProfit: +(5000 + rand() * 20000).toFixed(0),
-    eps: +(20 + rand() * 60).toFixed(2),
-    operatingMargin: +(12 + rand() * 18).toFixed(1),
+    revenue: +(5000 + r() * 150000).toFixed(0),
+    netProfit: +(500 + r() * 30000).toFixed(0),
+    eps: +(2 + r() * 80).toFixed(2),
+    operatingMargin: +(8 + r() * 25).toFixed(1),
   }));
 }

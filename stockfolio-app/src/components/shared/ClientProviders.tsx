@@ -8,7 +8,6 @@ const GlobalEffects = dynamic(() => import('./GlobalEffects'), { ssr: false });
 export default function ClientProviders() {
   return (
     <>
-      <CustomCursor />
       <GlobalEffects />
     </>
   );

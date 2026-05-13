@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2, TrendingUp, TrendingDown, ArrowUpRight } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 
@@ -28,13 +29,14 @@ export default function LoginPage() {
   const [password, setPassword]     = useState('');
   const [showPw, setShowPw]         = useState(false);
   const [loading, setLoading]       = useState(false);
+  const router                      = useRouter();
 
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     clearError();
     setLoading(true);
     const result = await loginWithEmail(email, password);
-    if (!result.error) window.location.href = '/dashboard';
+    if (!result.error) router.push('/dashboard');
     else setLoading(false);
   };
 
@@ -251,6 +253,8 @@ export default function LoginPage() {
           </div>
         </motion.div>
       </div>
+
+
     </div>
   );
 }

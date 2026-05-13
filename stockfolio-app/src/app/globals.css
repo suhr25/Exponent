@@ -28,6 +28,7 @@ nextjs-portal { display: none !important; }
 html {
   scroll-behavior: smooth;
   color-scheme: dark;
+  cursor: auto !important;
 }
 
 body {
@@ -37,6 +38,7 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  cursor: auto !important;
 }
 
 /* All numbers align perfectly in tables */
@@ -449,50 +451,6 @@ button, a, input, select, textarea {
   animation: fade-in 0.1s ease both;
 }
 
-/* ─── Custom Cursor ──────────────────────────────────────────────────────── */
-@media (pointer: fine) {
-  html, *, *::before, *::after { cursor: none !important; }
-
-  .cur-dot {
-    position: fixed;
-    width: 6px; height: 6px;
-    background: #22d3ee;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 999999;
-    transform: translate(-50%, -50%);
-    will-change: left, top;
-    transition: width 0.15s ease, height 0.15s ease, opacity 0.15s ease, background 0.15s ease;
-  }
-  .cur-dot.cur-hover   { width: 4px; height: 4px; opacity: 0.5; }
-  .cur-dot.cur-click   { width: 10px; height: 10px; background: #fff; opacity: 0.8; transition: width 0.08s, height 0.08s; }
-
-  .cur-ring {
-    position: fixed;
-    width: 34px; height: 34px;
-    border: 1.5px solid rgba(34, 211, 238, 0.45);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 999998;
-    transform: translate(-50%, -50%);
-    will-change: left, top;
-    transition: width 0.22s cubic-bezier(0.4,0,0.2,1),
-                height 0.22s cubic-bezier(0.4,0,0.2,1),
-                border-color 0.22s ease,
-                background 0.22s ease;
-  }
-  .cur-ring.cur-hover {
-    width: 50px; height: 50px;
-    border-color: rgba(34, 211, 238, 0.75);
-    background: rgba(34, 211, 238, 0.055);
-  }
-  .cur-ring.cur-click {
-    width: 22px; height: 22px;
-    border-color: rgba(255,255,255,0.8);
-    background: rgba(255,255,255,0.08);
-    transition: width 0.09s, height 0.09s;
-  }
-}
 
 /* ─── Ripple Effect ──────────────────────────────────────────────────────── */
 @keyframes ripple-expand {

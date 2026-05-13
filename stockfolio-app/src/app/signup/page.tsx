@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, ArrowLeft, Loader2, Check, Mail } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 
@@ -14,6 +15,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [signingUp, setSigningUp] = useState(false);
   const [confirmationSent, setConfirmationSent] = useState(false);
+  const router = useRouter();
 
   const passwordChecks = [
     { label: 'At least 6 characters', met: password.length >= 6 },
@@ -29,7 +31,7 @@ export default function SignupPage() {
     const result = await signupWithEmail(name, email, password);
     if (result.error) { setSigningUp(false); return; }
     if (result.needsConfirmation) { setConfirmationSent(true); setSigningUp(false); return; }
-    window.location.href = '/dashboard';
+    router.push('/dashboard');
   };
 
   if (confirmationSent) {

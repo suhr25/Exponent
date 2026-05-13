@@ -116,8 +116,8 @@ export default function GlobalSearch() {
             >
               <div className="mx-4 rounded-2xl bg-[#0e0e18] border border-white/[0.06] shadow-2xl shadow-black/50 overflow-hidden">
                 {/* Search Input */}
-                <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.04]">
-                  <Search className="w-5 h-5 text-zinc-500 flex-shrink-0" />
+                <div className="flex items-center gap-4 px-5 py-4.5 border-b border-white/[0.04] bg-white/[0.01]">
+                  <Search className="w-5 h-5 text-cyan-500/70 flex-shrink-0" />
                   <input
                     ref={inputRef}
                     type="text"
@@ -125,16 +125,24 @@ export default function GlobalSearch() {
                     onChange={e => setQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Search stocks by name, symbol, or sector..."
-                    className="flex-1 bg-transparent text-white text-sm placeholder:text-zinc-600 outline-none"
+                    className="flex-1 bg-transparent text-white text-base placeholder:text-zinc-600 outline-none"
                   />
-                  {query && (
-                    <button onClick={() => setQuery('')} className="text-zinc-500 hover:text-white">
-                      <X className="w-4 h-4" />
+                  <div className="flex items-center gap-2">
+                    {query && (
+                      <button 
+                        onClick={() => setQuery('')} 
+                        className="p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.05] transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => setIsOpen(false)} 
+                      className="text-[10px] px-2 py-1.5 rounded-lg bg-white/[0.05] text-zinc-500 font-mono border border-white/[0.06] hover:bg-white/[0.1] transition-colors"
+                    >
+                      ESC
                     </button>
-                  )}
-                  <button onClick={() => setIsOpen(false)} className="text-[10px] px-2 py-1 rounded bg-white/[0.05] text-zinc-500 font-mono border border-white/[0.06]">
-                    ESC
-                  </button>
+                  </div>
                 </div>
 
                 {/* Results */}
@@ -158,30 +166,38 @@ export default function GlobalSearch() {
                       key={stock.sym}
                       onClick={() => navigateToStock(stock.sym)}
                       onMouseEnter={() => setSelectedIndex(index)}
-                      className={`w-full flex items-center gap-3 px-5 py-3 text-left transition-colors ${
+                      className={`w-full flex items-center gap-4 px-5 py-3.5 text-left transition-all ${
                         index === selectedIndex
-                          ? 'bg-cyan-500/[0.06] border-l-2 border-cyan-400'
+                          ? 'bg-cyan-500/[0.07] border-l-2 border-cyan-400'
                           : 'hover:bg-white/[0.02] border-l-2 border-transparent'
                       }`}
                     >
-                      <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center flex-shrink-0">
-                        <TrendingUp className="w-4 h-4 text-cyan-400/60" />
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                        index === selectedIndex ? 'bg-cyan-500/20' : 'bg-white/[0.04]'
+                      }`}>
+                        <TrendingUp className={`w-5 h-5 ${index === selectedIndex ? 'text-cyan-400' : 'text-zinc-500'}`} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-white">{stock.sym}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.04] text-zinc-500 font-medium">
+                      
+                      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-base font-bold text-white tracking-tight">{stock.sym}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/[0.05] text-zinc-400 font-bold uppercase tracking-wider border border-white/[0.03]">
                             {stock.mcap === 'large' ? 'Large Cap' : stock.mcap === 'mid' ? 'Mid Cap' : 'Small Cap'}
                           </span>
                         </div>
-                        <p className="text-xs text-zinc-500 truncate">{stock.name}</p>
+                        <p className="text-xs text-zinc-500 truncate font-medium">{stock.name}</p>
                       </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className="text-[10px] text-zinc-600">{stock.sector}</div>
+
+                      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.03] text-zinc-500 font-semibold border border-white/[0.05]">
+                          {stock.sector}
+                        </span>
+                        {index === selectedIndex && (
+                          <motion.div initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }}>
+                            <ArrowRight className="w-4 h-4 text-cyan-400" />
+                          </motion.div>
+                        )}
                       </div>
-                      {index === selectedIndex && (
-                        <ArrowRight className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
-                      )}
                     </button>
                   ))}
                 </div>

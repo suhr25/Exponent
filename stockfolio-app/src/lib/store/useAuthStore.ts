@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { createClient } from '@/lib/supabase/client';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+import type { User as SupabaseUser, AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 interface UserProfile {
   id: string;
@@ -29,6 +29,32 @@ interface AuthStore {
   clearError: () => void;
 }
 
+// Build a profile from session data (instant, no network call)
+function userFromSession(user: SupabaseUser): UserProfile {
+  return {
+    id: user.id,
+    email: user.email || '',
+    name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+    avatar_url: user.user_metadata?.avatar_url,
+  };
+}
+
+// Fetch profile from Supabase — fire-and-forget enrichment
+// Returns null if not found (graceful)
+async function fetchProfile(userId: string): Promise<UserProfile | null> {
+  try {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 export const useAuthStore = create<AuthStore>()((set, get) => ({
   user: null,
   supabaseUser: null,
@@ -40,35 +66,48 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
   initialize: async () => {
     if (get().initialized) return;
     
-    set({ isLoading: true });
     const supabase = createClient();
 
     try {
-      // Get current session
-      const { data: { session } } = await supabase.auth.getSession();
+      // Use getUser() for server-verified session (not just local storage)
+      const { data: { user } } = await supabase.auth.getUser();
 
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
+      if (user) {
+        // FAST: Set auth state immediately with session data — no waiting for DB
         set({
-          supabaseUser: session.user,
-          user: profile || userFromSession(session.user),
+          supabaseUser: user,
+          user: userFromSession(user),
           isAuthenticated: true,
           isLoading: false,
           initialized: true,
+        });
+
+        // BACKGROUND: Enrich with profile data from DB (non-blocking)
+        fetchProfile(user.id).then(profile => {
+          if (profile) {
+            set({ user: profile });
+          }
         });
       } else {
         set({ isLoading: false, initialized: true });
       }
 
-      // Listen for auth changes
-      supabase.auth.onAuthStateChange(async (event, session) => {
+      // Listen for auth changes (Google OAuth return, sign out, etc.)
+      supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
         if (event === 'SIGNED_IN' && session?.user) {
-          const profile = await fetchProfile(session.user.id);
+          // Immediately set user from session metadata (instant)
           set({
             supabaseUser: session.user,
-            user: profile || userFromSession(session.user),
+            user: userFromSession(session.user),
             isAuthenticated: true,
             isLoading: false,
+          });
+
+          // Background enrich
+          fetchProfile(session.user.id).then(profile => {
+            if (profile) {
+              set({ user: profile });
+            }
           });
         } else if (event === 'SIGNED_OUT') {
           set({
@@ -77,6 +116,9 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
             isAuthenticated: false,
             isLoading: false,
           });
+        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+          // Silently update the supabase user reference
+          set({ supabaseUser: session.user });
         }
       });
     } catch {
@@ -102,14 +144,18 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
       return { error: message };
     }
 
-    // Auth succeeded — update state
+    // Auth succeeded — set state instantly from session
     if (data.user) {
-      const profile = await fetchProfile(data.user.id);
       set({
         supabaseUser: data.user,
-        user: profile || userFromSession(data.user),
+        user: userFromSession(data.user),
         isAuthenticated: true,
         isLoading: false,
+      });
+
+      // Background enrich
+      fetchProfile(data.user.id).then(profile => {
+        if (profile) set({ user: profile });
       });
     }
 
@@ -142,12 +188,15 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
 
     // Auto-confirmed signup (email confirmation disabled)
     if (data.user && data.session) {
-      const profile = await fetchProfile(data.user.id);
       set({
         supabaseUser: data.user,
-        user: profile || userFromSession(data.user),
+        user: userFromSession(data.user),
         isAuthenticated: true,
         isLoading: false,
+      });
+
+      fetchProfile(data.user.id).then(profile => {
+        if (profile) set({ user: profile });
       });
     }
 
@@ -165,12 +214,15 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
         provider: 'google',
         options: {
           redirectTo: `${baseUrl}/auth/callback`,
+          queryParams: {
+            prompt: 'select_account', // Always show account picker (avoids stale sessions)
+          },
         },
       });
       if (error) {
         set({ isLoading: false, error: error.message });
       }
-      // Note: On success, the browser navigates away to Google, so isLoading stays true
+      // On success, the browser navigates away to Google, so isLoading stays true
     } catch (err) {
       set({ isLoading: false, error: 'Failed to initiate Google sign-in. Please try again.' });
       console.error('Google OAuth error:', err);
@@ -198,12 +250,15 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
       return { error: error.message };
     }
     if (data.user) {
-      const profile = await fetchProfile(data.user.id);
       set({
         supabaseUser: data.user,
-        user: profile || userFromSession(data.user),
+        user: userFromSession(data.user),
         isAuthenticated: true,
         isLoading: false,
+      });
+
+      fetchProfile(data.user.id).then(profile => {
+        if (profile) set({ user: profile });
       });
     }
     return {};
@@ -217,28 +272,3 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
 
   clearError: () => set({ error: null }),
 }));
-
-// Build a profile from session data (fallback if profiles table isn't populated yet)
-function userFromSession(user: SupabaseUser): UserProfile {
-  return {
-    id: user.id,
-    email: user.email || '',
-    name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
-    avatar_url: user.user_metadata?.avatar_url,
-  };
-}
-
-// Fetch profile from Supabase — returns null if not found (graceful)
-async function fetchProfile(userId: string): Promise<UserProfile | null> {
-  try {
-    const supabase = createClient();
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    return data;
-  } catch {
-    return null;
-  }
-}

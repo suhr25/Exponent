@@ -187,7 +187,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!initialized || isLoading || !user) {
     return (
       <div className="min-h-screen bg-[#050507] flex items-center justify-center overflow-hidden">
-        <ParticleCanvas />
         <div className="relative flex flex-col items-center gap-5">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-cyan-500/20 animate-pulse">
             <svg className="w-5 h-5 text-[#050507]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

@@ -44,7 +44,7 @@ export const useWatchlistStore = create<WatchlistStore>()(
         ]);
 
         if (watchlistRes.status === 'fulfilled' && watchlistRes.value.data) {
-          const items: WatchlistItem[] = watchlistRes.value.data.map(row => {
+          const items: WatchlistItem[] = watchlistRes.value.data.map((row: any) => {
             const quote = MOCK_QUOTES.find(q => q.symbol === row.symbol);
             return {
               symbol: row.symbol,
@@ -59,7 +59,7 @@ export const useWatchlistStore = create<WatchlistStore>()(
         }
 
         if (alertsRes.status === 'fulfilled' && alertsRes.value.data) {
-          const alerts: PriceAlert[] = alertsRes.value.data.map(row => ({
+          const alerts: PriceAlert[] = alertsRes.value.data.map((row: any) => ({
             id: row.id,
             symbol: row.symbol,
             condition: row.condition as PriceAlert['condition'],
@@ -93,7 +93,7 @@ export const useWatchlistStore = create<WatchlistStore>()(
 
         // Fire-and-forget Supabase sync
         const supabase = createClient();
-        supabase.auth.getUser().then(({ data: { user } }) => {
+        supabase.auth.getUser().then(({ data: { user } }: any) => {
           if (!user) return;
           supabase
             .from('watchlist')
@@ -106,7 +106,7 @@ export const useWatchlistStore = create<WatchlistStore>()(
         set(state => ({ items: state.items.filter(i => i.symbol !== symbol) }));
 
         const supabase = createClient();
-        supabase.auth.getUser().then(({ data: { user } }) => {
+        supabase.auth.getUser().then(({ data: { user } }: any) => {
           if (!user) return;
           supabase.from('watchlist').delete().eq('user_id', user.id).eq('symbol', symbol).then();
         });
@@ -127,7 +127,7 @@ export const useWatchlistStore = create<WatchlistStore>()(
         set(state => ({ alerts: [...state.alerts, newAlert] }));
 
         const supabase = createClient();
-        supabase.auth.getUser().then(({ data: { user } }) => {
+        supabase.auth.getUser().then(({ data: { user } }: any) => {
           if (!user) return;
           supabase
             .from('alerts')

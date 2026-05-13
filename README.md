@@ -4,7 +4,7 @@ Exponent (StockFolio) is a premium, high-performance SaaS platform built for ser
 
 ![Hero Section Placeholder](https://github.com/suhr25/Exponent/raw/main/stockfolio-app/public/next.svg) 
 
-## * Key Features
+## Key Features
 
 - ** Premium Design:** Sleek dark-mode interface with glassmorphism, smooth Framer Motion animations, and custom 3D particle fields.
 - ** Real-time Portfolio Tracking:** Monitor your holdings, P&L, and sector exposure with live updates.
@@ -13,7 +13,7 @@ Exponent (StockFolio) is a premium, high-performance SaaS platform built for ser
 - ** Secure Auth:** Full authentication flow powered by Supabase.
 - ** Responsive UI:** Fully optimized for all device sizes.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Frontend:** [Next.js 14+](https://nextjs.org/) (App Router), TypeScript, Tailwind CSS
 - **Animations:** [Framer Motion](https://www.framer.com/motion/), [Three.js](https://threejs.org/) (React Three Fiber)
@@ -21,7 +21,7 @@ Exponent (StockFolio) is a premium, high-performance SaaS platform built for ser
 - **State Management:** [Zustand](https://docs.pmnd.rs/zustand/)
 - **Charts:** [Recharts](https://recharts.org/)
 
-## 📂 Project Structure
+## Project Structure
 
 ```bash
 Exponent/
@@ -35,7 +35,7 @@ Exponent/
 └── .gitignore            # Root git configuration
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js 18+ 
@@ -67,7 +67,7 @@ Exponent/
    ```
    Open [http://localhost:3000](http://localhost:3000) to see the result.
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 

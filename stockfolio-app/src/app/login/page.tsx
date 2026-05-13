@@ -28,6 +28,9 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   auth_code_exchange_failed: 'Google sign-in failed. Please try again.',
   auth_failed: 'Authentication failed. Please try again.',
   no_auth_code: 'Authentication was cancelled or timed out. Please try again.',
+  auth_session_expired: 'Your sign-in session expired. Please try again.',
+  auth_cancelled: 'Sign-in was cancelled. Please try again when ready.',
+  auth_provider_error: 'Google encountered an error. Please try again.',
 };
 
 export default function LoginPage() {
